@@ -7,6 +7,10 @@ let gameOver = false;
 
 let AnimationId;
 
+// var cirSpeed = 1;
+// var cirX =  1;
+// var cirY =  1;
+
 var oSnake;
 
 
@@ -39,6 +43,7 @@ function SetupCanvas(){
     gameOver = false;
     running = false;
 
+        
     oSnake = new Snake(200, 200, 'green');
     oSnake.draw();
     
@@ -56,14 +61,14 @@ class Snake {
         this._y = y;
 
         
-        this.previousX = x-20;
+        this.previousX = x-30;
         this.previousY = y;
 
         // defines movement direction of paddles
         this.move = DIRECTION.STOPPED;
 
         // defines how quickly tiles can be moved
-        this.velocity = 20;
+        this.velocity = 1;
         this.snappedTiles = [];
 
         // save head's positon for next tile
@@ -75,8 +80,8 @@ class Snake {
 
         // adding default tiles to initial body
         for (let index = 0; index < 3; index++) {
-            this.snappedTiles.push(new Tile(tilePosX, tilePosY, this.velocity, "blue", "@", tilePosX-20, tilePosY))
-            tilePosX -= 20;
+            this.snappedTiles.push(new Tile(tilePosX, tilePosY, this.velocity, "blue", "@", tilePosX-25, tilePosY))
+            tilePosX -= 25;
             // tilePosY = tilePosY;    // Y does not change fo the initial setup       
         }
         console.log("Snake.constructor.1");
@@ -87,82 +92,114 @@ class Snake {
     }
     set x(newValue) {
         this._x= newValue;
-        //this.SetPreviousPos();
+        this.SetPreviousPos();
     }
     get y() {
         return this._y;
     }
     set y(newValue) {
         this._y = newValue;
-        //this.SetPreviousPos();
+        this.SetPreviousPos();
     }
     draw(){
 
-        // draw head
-        ctx.fillStyle = "yellow";
-        ctx.fillRect(this.x, this.y, 20, 20);
-
-        // el ojo
-        ctx.beginPath();
-        ctx.arc(this.x+12, this.y+5, 2, 0, Math.PI*2, false);
-        ctx.fillStyle = 'black';
-        ctx.fill();
+        // la cabeza
+        // ctx.beginPath();
+        // ctx.arc(this.x, this.y, 10, 0, Math.PI*2, false);
+        // ctx.fillStyle = this.color;
+        // ctx.fill();
         
-        console.log("contruct.draw.1");
+        // // el ojo
+        // ctx.beginPath();
+        // ctx.arc(this.x+4, this.y-7, 2, 0, Math.PI*2, false);
+        // ctx.fillStyle = 'black';
+        // ctx.fill();
+
+        // console.log(  "previous-X: " + this.previousX + "-" + this.x + " previous-Y: " + this.previousY + "-" + this.y);
+        
+        // Debug Only
+        ctx.rect(this.x, this.y, 20, 20);
+        ctx.fillStyle = 'yellow';
+        ctx.stroke()
+        
+        console.log("draw.1");
         console.log(this.snappedTiles)
 
-        //Draw individual tiles into body
+        //save head's positon for next tile
+        let tilePosX = this.previousX;
+        let tilePosY = this.previousY;
+
+        //Draw individual tiles into cuerpo
         for (let index = 0; index < this.snappedTiles.length; index++) {
 
             const currentTile = this.snappedTiles[index];
+
+            // tilePosX -= 23;
+            // currentTile.update(tilePosX, tilePosY);
+            // currentTile.x =  tilePosX
+            // currentTile.y = tilePosY;
             currentTile.draw();
+
+            // set the positon for the next tile
+            // tilePosX = currentTile.previousX;
+            // tilePosY = currentTile.previousY
+
         }
-        // console.log("contructdraw.2");
-        // console.log(this.snappedTiles)
+        console.log("draw.2");
+        console.log(this.snappedTiles)
     }
-    update(){
+    SetPreviousPos(){
 
         // console.log("SetPreviousPos.enter");
-
-        // save previous position
-        this.previousX = this._x;
-        this.previousY = this._y;
 
         // here it is where my next tile should be
         switch (this.move) {
             case DIRECTION.DOWN:
-                oSnake.y += oSnake.velocity;
+                // this.previousX = this._x-10;
+                this.previousY = this._y-10;
                 break;
             case DIRECTION.UP:
-                oSnake.y -= oSnake.velocity;
+                //this.previousX = this._x-10;
+                this.previousY = this._y+10;
                 break;        
             case DIRECTION.RIGHT:
-                oSnake.x += oSnake.velocity;
+                this.previousX = this._x-10;
+                //this.previousY = this._y-10;
                 break;     
             case DIRECTION.LEFT:
-                oSnake.x -= oSnake.velocity;
+                this.previousX = this._x+10;
+                //this.previousY = this._y-10;
                 break;
         }
-        console.log("update.updatePrevious.1");
-        console.log(this.snappedTiles)
 
-        var tilePosX = this.previousX;
-        var tilePosY = this.previousY;
+        // this.previousX = this._x;
+        // this.previousY = this._y;
 
-        //Draw individual tiles into body
+        // save head's positon for next tile
+        let tilePosX = this.previousX;
+        let tilePosY = this.previousY;
+
+        console.log("SetPrev->Posx.Posy: " + tilePosX + "-" + tilePosY);
+
+        //Draw individual tiles into cuerpo
         for (let index = 0; index < this.snappedTiles.length; index++) {
 
             const currentTile = this.snappedTiles[index];
 
+            //tilePosX -= 30;
             currentTile.update(tilePosX, tilePosY);
+            // element.x =  tilePosX
+            // element.y = tilePosY;
+            
+            currentTile.draw();
 
             // set the positon for the next tile
             tilePosX = currentTile.previousX;
             tilePosY = currentTile.previousY
 
         }
-        console.log("update.updatePrevious.2");
-        console.log(this.snappedTiles)
+        console.log("SetPos.1");
+        console.log(this.snappedTiles);
     }
 }
 class Tile {
@@ -199,17 +236,17 @@ class Tile {
 
         ctx.fillStyle = 'rgba(0,0,255)';
         ctx.font = "10pt sans-serif";
+
         ctx.strokeText(this.letter, this.x+3, this.y+15);
 
     }
     update(newPosX, newPosY){
 
-        // console.log("tile.update.enter: " + this.previousX  + "-" + this.previousY + "-" + newPosX + "-" + newPosY);
+        console.log("tile.update.enter: " + this.previousX  + "-" + this.previousY + "-" + newPosX + "-" + newPosY);
 
         // save my current postion
         this.previousX = this.x;
         this.previousY = this.y;
-
         // set my new postion
         this.x = newPosX;
         this.y = newPosY;
@@ -222,9 +259,7 @@ function gameLoop(){
     if(gameOver==false) {
 
         AnimationId = requestAnimationFrame(gameLoop);
-
-        // TDO: Use when want to keep it moving automatically
-        //update();
+        update();
         paint();
 
     } else {
@@ -254,30 +289,47 @@ function paint(){
 }
 function update(){
 
-    // console.log("update.enter")
-
-    oSnake.update();
-
-    // if player tries to move off the board prevent that (LE: No need for this game)
-    if(oSnake.y <= 0){
-        gameOver = true;
-    } else if(oSnake.y >= (canvas.height)){
-        gameOver = true;
+    console.log("update.enter")
+    // sideway cases
+    if(oSnake.move === DIRECTION.RIGHT){
+        oSnake.x += oSnake.velocity;
+    } else if(oSnake.move === DIRECTION.LEFT){
+        oSnake.x -= oSnake.velocity;
     }
+
+    // sideway cases
+    if(oSnake.move === DIRECTION.UP){
+        oSnake.y -= oSnake.velocity;
+    } else if(oSnake.move === DIRECTION.DOWN){
+        oSnake.y += oSnake.velocity;
+    }
+    oSnake.SetPreviousPos();
+
+    //If player tries to move off the board prevent that (LE: No need for this game)
+    if(oSnake.y <= 0){
+        gameOver=true;
+    } else if(oSnake.y >= (canvas.height)){
+        gameOver=true;
+    }
+
+    // cirX += cirSpeed;
+    // cirY += cirSpeed;
+
+    // // enemies off the screen?
+    // if (cirX > canvas.height ){
+    //     cirSpeed = cirSpeed * -1;
+    // } else if (cirX < 0) {
+    //     cirSpeed = cirSpeed * -1;
+    // } 
+
+    // oSnake.x = cirX;
+    // oSnake.y = cirY;
 }
 function MovePlayerPaddle(key){
 
     if(running === false){
         running = true;
         window.requestAnimationFrame(gameLoop);
-    }
-    
-    // handle scape as game over
-    if(key.keyCode === 27) gameOver = true;
-
-    // Handle space bar for PAUSE
-    if(key.keyCode === 32) {
-        running = false;
     }
 
     // Handle up arrow and w input
@@ -290,7 +342,55 @@ function MovePlayerPaddle(key){
     // Handle right arrow and d input
     if(key.keyCode === 39 || key.keyCode === 68) oSnake.move = DIRECTION.RIGHT;
     
-    update();
+    // Handle space bar for ???
+    if(key.keyCode === 32) {
 
-    // console.log("key.code: " + key.keyCode)
+    }
+
+    // handle scape as game over
+    if(key.keyCode === 27) gameOver = true;
+
+    console.log("key.code: " + key.keyCode)
+}
+
+
+
+
+function placeHolder(){
+
+    // // Draw player
+    // player = new Player((canvas.width/2), 'white');
+
+    // for (let index = 0; index <1000; index+=1) {
+
+            // creating circles
+            // ctx.beginPath();
+            // ctx.fillStyle = 'yellow';
+            // ctx.arc(cirX+cirSpeed, cirY+cirSpeed, 40, 0, 2 * Math.PI);
+            // ctx.stroke(); 
+            //  console.log("x: " + cirX+cirSpeed + " y: " + cirY+cirSpeed);
+
+
+            // ctx.font = "60px Verdana";    
+            // // Create gradient
+            // var gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+            // gradient.addColorStop("0"," magenta");
+            // gradient.addColorStop("0.5", "blue");
+            // gradient.addColorStop("1.0", "red");
+            // // Fill with gradient
+            // ctx.fillStyle = gradient;
+            // var tX = innerWidth/2;
+            // var tY = index+50;
+            // ctx.fillText("Target Innovations", , 200);
+
+            // creating rectangle
+            // ctx.beginPath();
+            // var rSpeed=0;
+            // rSpeed += 10;
+            // var rX =  canvas.width - rSpeed;
+            // var rY =  canvas.height - rSpeed;
+            // ctx.rect(rX, rY, 150, 100);
+            // ctx.stroke()
+
+    //}
 }
