@@ -7,9 +7,9 @@ let gameOver = false;
 
 let AnimationId;
 
-var cirSpeed = 1;
-var cirX =  1;
-var cirY =  1;
+// var cirSpeed = 1;
+// var cirX =  1;
+// var cirY =  1;
 
 var oSnake;
 
@@ -39,8 +39,9 @@ function SetupCanvas(){
     document.addEventListener('keydown', MovePlayerPaddle);
 
     // trigger Animation
-    AnimationId = requestAnimationFrame(gameLoop);
+    // AnimationId = requestAnimationFrame(gameLoop);
     gameOver = false;
+    running = false;
 
         
     oSnake = new Snake(200, 200, 'green');
@@ -59,31 +60,32 @@ class Snake {
         this._x = x;
         this._y = y;
 
+        
         this.previousX = x-30;
         this.previousY = y-10;
 
-        // Defines movement direction of paddles
+        // defines movement direction of paddles
         this.move = DIRECTION.STOPPED;
 
-        // Defines how quickly paddles can be moved
+        // defines how quickly tiles can be moved
         this.velocity = 1;
         this.snappedTiles = [];
 
-        //save head's positon for next tile
+        // save head's positon for next tile
         let tilePosX = this.previousX;
         let tilePosY = this.previousY;
 
+        console.log("constructor-x.y: " + this.x + "-" + this.y);
+        console.log("constructor-Posx.Posy: " + tilePosX + "-" + tilePosY);
+
         // adding default tiles to initial body
         for (let index = 0; index < 3; index++) {
-            this.snappedTiles.push(new Tile(tilePosX, tilePosY, this.velocity, "blue", "@", tilePosX-23, tilePosY))
+            this.snappedTiles.push(new Tile(tilePosX, tilePosY, this.velocity, "blue", "@", tilePosX-25, tilePosY))
             tilePosX -= 25;
             // tilePosY = tilePosY;    // Y does not change fo the initial setup       
         }
-        // this.snappedTiles.push(new Tile(tilePosX, tilePosY, this.velocity, "blue", "A", tilePosX-23, tilePosY))
-        // tilePosX -= 23;
-        // this.snappedTiles.push(new Tile(tilePosX, tilePosY, this.velocity, "blue", "B", tilePosX-23, tilePosY))
-        // tilePosX -= 23;
-        // this.snappedTiles.push(new Tile(tilePosX, tilePosY, this.velocity, "blue", "C", tilePosX-23, tilePosY))
+        console.log("Snake.constructor.1");
+        console.log(this.snappedTiles)
     }
     get x() {
         return this._x;
@@ -113,15 +115,19 @@ class Snake {
         ctx.fillStyle = 'black';
         ctx.fill();
 
-        console.log(  "previous-X: " + this.previousX + "-" + this.x + " previous-Y: " + this.previousY + "-" + this.y);
+        // console.log(  "previous-X: " + this.previousX + "-" + this.x + " previous-Y: " + this.previousY + "-" + this.y);
         
+        // Debug Only
         // ctx.rect(this.previousX, this.previousY, 20, 20);
         // ctx.fillStyle = 'yellow';
         // ctx.stroke()
+        
+        console.log("draw.1");
+        console.log(this.snappedTiles)
 
         // save head's positon for next tile
-        let tilePosX = this.previousX;
-        let tilePosY = this.previousY;
+        // let tilePosX = this.previousX;
+        // let tilePosY = this.previousY;
 
         // Draw individual tiles into cuerpo
         for (let index = 0; index < this.snappedTiles.length; index++) {
@@ -130,17 +136,23 @@ class Snake {
 
             // tilePosX -= 23;
             // currentTile.update(tilePosX, tilePosY);
-            // element.x =  tilePosX
-            // element.y = tilePosY;
+            // currentTile.x =  tilePosX
+            // currentTile.y = tilePosY;
             currentTile.draw();
 
             // set the positon for the next tile
-            tilePosX = currentTile.previousX;
-            tilePosY = currentTile.previousY
+            // tilePosX = currentTile.previousX;
+            // tilePosY = currentTile.previousY
 
         }
+        console.log("draw.2");
+        console.log(this.snappedTiles)
     }
     SetPreviousPos(){
+
+        // console.log("SetPreviousPos.enter");
+
+        //here it is where my next tile should be
         switch (this.move) {
             case DIRECTION.DOWN:
                 this.previousX = this._x-10;
@@ -160,6 +172,34 @@ class Snake {
                 break;
         }
 
+        // this.previousX = this._x;
+        // this.previousY = this._y;
+
+        // save head's positon for next tile
+        let tilePosX = this.previousX;
+        let tilePosY = this.previousY;
+
+        console.log("SetPrev->Posx.Posy: " + tilePosX + "-" + tilePosY);
+
+        //Draw individual tiles into cuerpo
+        for (let index = 0; index < this.snappedTiles.length; index++) {
+
+            const currentTile = this.snappedTiles[index];
+
+            tilePosX -= 25;
+            currentTile.update(tilePosX, tilePosY);
+            // element.x =  tilePosX
+            // element.y = tilePosY;
+            
+            currentTile.draw();
+
+            // set the positon for the next tile
+            tilePosX = currentTile.previousX;
+            tilePosY = currentTile.previousY
+
+        }
+        console.log("SetPos.1");
+        console.log(this.snappedTiles);
     }
 }
 class Tile {
@@ -168,9 +208,8 @@ class Tile {
 
         this.color = color;
 
-        // Center the player
+        // position on canvas
         this.x = x;
-        // place player half off the bottom screen
         this.y = y;
 
         this.previousX = previousX;
@@ -184,10 +223,6 @@ class Tile {
         // Defines movement direction of paddles
         this.move = DIRECTION.STOPPED;
 
-        // Defines how quickly paddles can be moved
-        this.velocity = velocity;
-        //console.log("Player created")
-
         this.letter = letter;
 
         this.snapped = false;
@@ -199,26 +234,28 @@ class Tile {
         ctx.fillRect(this.x, this.y, this.width, this.height);
         ctx.fill();
 
-        ctx.fillStyle = 'rgba(0,0,255)'; // Legal;
+        ctx.fillStyle = 'rgba(0,0,255)';
         ctx.font = "10pt sans-serif";
-        // c.fillText(this.letter, this.x, 100);
+
         ctx.strokeText(this.letter, this.x+3, this.y+15);
 
     }
-    update(newPosX, newPosYy){
+    update(newPosX, newPosY){
+
+        console.log("tile.update.enter: " + this.previousX  + "-" + this.previousY + "-" + newPosX + "-" + newPosY);
 
         // save my current postion
         this.previousX = this.x;
         this.previousY = this.y;
         // set my new postion
         this.x = newPosX;
-        this.y = newPosYy;
+        this.y = newPosY;
 
     }
 }
 function gameLoop(){
 
-    console.log("Games is On!!");
+    // console.log("Game is On!!");
     if(gameOver==false) {
 
         AnimationId = requestAnimationFrame(gameLoop);
@@ -249,35 +286,25 @@ function paint(){
 
     oSnake.draw();
 
-    // // gameOver = true;
-
-    // if (gameOver) {
-    //     console.log("gameOver: " + gameOver);
-    //     cancelAnimationFrame(AnimationId);
-    //     // clearInterval(refreshIntervalId);
-    // }
-
 }
 function update(){
 
+    console.log("update.enter")
     // sideway cases
     if(oSnake.move === DIRECTION.RIGHT){
-        // oSnake.SetPreviousPos();
         oSnake.x += oSnake.velocity;
     } else if(oSnake.move === DIRECTION.LEFT){
-        // oSnake.SetPreviousPos();
         oSnake.x -= oSnake.velocity;
     }
 
     // sideway cases
     if(oSnake.move === DIRECTION.UP){
-        // oSnake.SetPreviousPos();
         oSnake.y -= oSnake.velocity;
     } else if(oSnake.move === DIRECTION.DOWN){
-        // oSnake.SetPreviousPos();
         oSnake.y += oSnake.velocity;
     }
-    
+    oSnake.SetPreviousPos();
+
     //If player tries to move off the board prevent that (LE: No need for this game)
     if(oSnake.y <= 0){
         gameOver=true;
@@ -300,10 +327,10 @@ function update(){
 }
 function MovePlayerPaddle(key){
 
-    // if(running === false){
-    //     running = true;
-    //     window.requestAnimationFrame(gameLoop);
-    // }
+    if(running === false){
+        running = true;
+        window.requestAnimationFrame(gameLoop);
+    }
 
     // Handle up arrow and w input
     if(key.keyCode === 38 || key.keyCode === 87) oSnake.move = DIRECTION.UP;
