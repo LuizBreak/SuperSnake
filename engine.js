@@ -13,6 +13,7 @@ var cirY =  1;
 
 var oSnake;
 
+
 // Used to monitor whether paddles and ball are
 // moving and in what direction
 let DIRECTION = {
@@ -48,11 +49,9 @@ function SetupCanvas(){
 }
 class Snake {
 
-    
     constructor(x, y, color){
 
         this.color = color;
-        this.cabeza = "";
 
         // let _x = 0;
         // let _y = 0;
@@ -72,9 +71,12 @@ class Snake {
 
         // Defines how quickly paddles can be moved
         this.velocity = 1;
+        this.snappedTiles = [];
+        // let tile = new Tile(this.previousX, this.previousY, this.velocity, "blue");
+        this.snappedTiles.push(new Tile(this.previousX, this.previousY, this.velocity, "blue", "A"))
+        this.snappedTiles.push(new Tile(this.previousX, this.previousY, this.velocity, "blue", "B"))
+        this.snappedTiles.push(new Tile(this.previousX, this.previousY, this.velocity, "blue", "C"))
     }
-
-
     get x() {
         return this._x;
     }
@@ -91,21 +93,33 @@ class Snake {
     }
     draw(){
 
+        // La cabeza
         ctx.beginPath();
         ctx.arc(this.x, this.y, 10, 0, Math.PI*2, false);
         ctx.fillStyle = this.color;
         ctx.fill();
 
         ctx.beginPath();
-        ctx.arc(this.x+2, this.y-2, 2, 0, Math.PI*2, false);
+        ctx.arc(this.x+4, this.y-7, 2, 0, Math.PI*2, false);
         ctx.fillStyle = 'black';
         ctx.fill();
 
         console.log(  "previous-X: " + this.previousX + "-" + this.x + " previous-Y: " + this.previousY + "-" + this.y);
-        // La cabeza
+        
         ctx.rect(this.previousX, this.previousY, 20, 20);
         ctx.fillStyle = 'yellow';
         ctx.stroke()
+
+        // Draw individual tiles into cuerpo
+        let tilePosX = this.previousX;
+        let tilePosY = this.previousY;
+        for (let index = 0; index < this.snappedTiles.length; index++) {
+            const element = this.snappedTiles[index];
+            tilePosX -= 23;
+            element.x =  tilePosX
+            element.y = tilePosY;
+            element.draw();
+        }
     }
     SetPreviousPos(){
         switch (this.move) {
@@ -127,6 +141,54 @@ class Snake {
                 break;
         }
 
+    }
+}
+class Tile {
+
+    constructor(x, y, velocity, color, letter){
+
+        this.color = color;
+
+        // Center the player
+        this.x = x;
+        // place player half off the bottom screen
+        this.y = y;
+
+        this.width = 20;
+        this.height = 20;
+
+        this.velocity = velocity;
+
+        // Defines movement direction of paddles
+        this.move = DIRECTION.STOPPED;
+
+        // Defines how quickly paddles can be moved
+        this.velocity = velocity;
+        //console.log("Player created")
+
+        this.letter = letter; "@"; // generateString(1);
+
+        this.snapped = false;
+
+    }
+    draw(){
+
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.fill();
+
+        // draw font in red
+        ctx.fillStyle = 'rgba(0,0,255)'; // Legal;
+        ctx.font = "10pt sans-serif";
+        // c.fillText(this.letter, this.x, 100);
+        ctx.strokeText(this.letter, this.x+5, this.y+15);
+
+        // debug
+        // console.log(this);
+        // console.log("Player drawn")
+    }
+    update(){
+        if(!this.snapped) this.y = this.y + this.velocity.y; 
     }
 }
 function gameLoop(){
@@ -172,7 +234,6 @@ function paint(){
 
 }
 function update(){
-
 
     // sideway cases
     if(oSnake.move === DIRECTION.RIGHT){
