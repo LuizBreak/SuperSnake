@@ -4,17 +4,12 @@ document.addEventListener('DOMContentLoaded', SetupCanvas);
 // Monitors whether game is currently in play
 let running = false;
 let gameOver = false;
-let score = 0;
-let dashboardHeight = 40;
+
 let AnimationId;
 
 let oSnake;
 let oMessageBox;
-let oTimeBox;
-let oScoreBox;
 let oVitamin;
-
-var today = new Date();
 
 // Used to monitor whether paddles and ball are
 // moving and in what direction
@@ -35,28 +30,22 @@ function SetupCanvas(){
     // working with Canvas
     ctx = canvas.getContext('2d');
 
-    canvas.width = innerWidth * 0.50;
-    canvas.height = innerHeight * 0.70;
+    canvas.width = canvas.width;
+    canvas.height = canvas.height;
 
     document.addEventListener('keydown', MovePlayerPaddle);
 
     // trigger Animation
     // AnimationId = requestAnimationFrame(gameLoop);
-
     gameOver = false;
     running = false;
 
-    oSnake = new Snake(canvas.width * 0.5, 280, 'green');
+    oSnake = new Snake(200, 200, 'green');
     oSnake.grow(3);
     oSnake.draw();
 
-    oVitamin = new Vitamin(150,180);
+    oVitamin = new Vitamin(75,75);
     oVitamin.draw();
-
-    oScoreBox = new MessageBox(5, 5, 150, 30, 'black', 'yellow', "20px Courier", "Score: 0");
-    oTimeBox = new MessageBox(canvas.width-158, 5, 152, 30, 'black', 'yellow', "20px Courier", getTime());
-
-    paint();
 
 }
 class Snake {
@@ -80,7 +69,7 @@ class Snake {
         this.move = DIRECTION.STOPPED;
 
         // defines how quickly tiles can be moved
-        this.velocity = 1;
+        this.velocity = 20;
         this.snappedTiles = [];
 
         // console.log("Snake.constructor.1");
@@ -102,8 +91,6 @@ class Snake {
     }
     draw(){
 
-        ctx.save();
-
         // draw head
         ctx.fillStyle = "yellow";
         ctx.fillRect(this.x, this.y, 20, 20);
@@ -113,23 +100,9 @@ class Snake {
         ctx.arc(this.x+12, this.y+5, 2, 0, Math.PI*2, false);
         ctx.fillStyle = 'black';
         ctx.fill();
-        ctx.strokeStyle = "black"
-        ctx.stroke();
         
-
-        // ctx.save();
-        // ctx.beginPath();   
-        // ctx.arc(this.x+12, this.y+5, 2, 0, Math.PI*2, false);
-        // ctx.fillStyle = 'black';
-        // ctx.fill();
-        // ctx.strokeStyle = "black";
-        // ctx.stroke();  
-        // ctx.closePath();
-        // ctx.restore();
-
-
-        // console.log("contruct.draw.1");
-        // console.log(this.snappedTiles)
+        console.log("contruct.draw.1");
+        console.log(this.snappedTiles)
 
         //Draw individual tiles into body
         for (let index = 0; index < this.snappedTiles.length; index++) {
@@ -137,8 +110,6 @@ class Snake {
             const currentTile = this.snappedTiles[index];
             currentTile.draw();
         }
-        ctx.restore();
-
         // console.log("contructdraw.2");
         // console.log(this.snappedTiles)
     }
@@ -153,22 +124,20 @@ class Snake {
         // here it is where my next tile should be
         switch (this.move) {
             case DIRECTION.DOWN:
-                this.y += this.velocity;
+                oSnake.y += oSnake.velocity;
                 break;
             case DIRECTION.UP:
-                this.y -= this.velocity;
+                oSnake.y -= oSnake.velocity;
                 break;        
             case DIRECTION.RIGHT:
-                this.x += this.velocity;
+                oSnake.x += oSnake.velocity;
                 break;     
             case DIRECTION.LEFT:
-                this.x -= this.velocity;
+                oSnake.x -= oSnake.velocity;
                 break;
         }
-        //console.log("update.updatePrevious.1");
-        //console.log(this.snappedTiles)
-        
-        console.log("Snake Postions -> x: " + this.x + " y: " + this.y);
+        console.log("update.updatePrevious.1");
+        console.log(this.snappedTiles)
 
         var tilePosX = this.previousX;
         var tilePosY = this.previousY;
@@ -185,20 +154,20 @@ class Snake {
             tilePosY = currentTile.previousY
 
         }
-        // console.log("update.updatePrevious.2");
-        // console.log(this.snappedTiles)
+        console.log("update.updatePrevious.2");
+        console.log(this.snappedTiles)
     }
     grow(numberOfTiles){
 
         let tilePosX = this.previousX;
         let tilePosY = this.previousY;
 
-        // console.log("grow-x.y: " + this.x + "-" + this.y);
-        // console.log("grow-Posx.Posy: " + tilePosX + "-" + tilePosY);
+        console.log("grow-x.y: " + this.x + "-" + this.y);
+        console.log("grow-Posx.Posy: " + tilePosX + "-" + tilePosY);
 
         // adding default tiles to initial body
         for (let index = 0; index < numberOfTiles; index++) {
-            this.snappedTiles.push(new Tile(tilePosX, tilePosY, this.velocity, "pink", "@", tilePosX-20, tilePosY))
+            this.snappedTiles.push(new Tile(tilePosX, tilePosY, this.velocity, "pink", "+", tilePosX-20, tilePosY))
             tilePosX -= 20;
             // tilePosY = tilePosY;    // Y does not change fo the initial setup       
         }
@@ -233,8 +202,6 @@ class Tile {
     }
     draw(){
 
-        ctx.save();
-        ctx.beginPath();
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
         ctx.fill();
@@ -242,8 +209,7 @@ class Tile {
         ctx.fillStyle = 'rgba(0,0,255)';
         ctx.font = "10pt sans-serif";
         ctx.strokeText(this.letter, this.x+3, this.y+15);
-        // ctx.closePath();
-        ctx.restore();
+
     }
     update(newPosX, newPosY){
 
@@ -261,7 +227,7 @@ class Tile {
 }
 class MessageBox{
 
-    constructor(x, y, wWith, wHeight, bgColor, foreColor, font, message){
+    constructor(x, y, wWith, wHeight, bgcolor, foreColor, message){
 
         this.x = x;
         this.y = y;
@@ -269,44 +235,44 @@ class MessageBox{
         this.wWith = wWith;
         this.wHeight = wHeight;
 
-        this.bgColor = bgColor;
-        this.foreColor = foreColor;
-        this.font = font;
-
+        this.bgcolor = bgcolor;
+        this.forecolor = forecolor;
+        
         this.message = message;
 
         let messagePosX = x+50;
         let messagePosY = y+100;
 
+
+
     }
     draw(){
-
-        ctx.save();
 
         // creating rectangle
         ctx.beginPath();
         ctx.rect(this.x, this.y, this.wWith, this.wHeight);
- 
-        ctx.fillStyle = this.bgColor;
-        ctx.fill();
+        ctx.fill = this.color;
+        ctx.stroke()
 
-        ctx.strokeStyle = 'green'
-        ctx.stroke();
+        // Create gradient
+        var gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
 
-        // console.log("MessageBox: -> x: " + this.x + " y: " + this.y + " Width: " + this.wWith + " Height: " + this.wHeight);
+        gradient.addColorStop("0"," magenta");
+        gradient.addColorStop("0.5", "blue");
+        gradient.addColorStop("1.0", "red");
 
-        ctx.fillStyle = this.foreColor;
-        ctx.font = this.font
-        ctx.fillText(this.message, this.x + (this.wWith*0.18), this.y + (this.wHeight*0.65));
+        // Fill with gradient
+        ctx.fillStyle = gradient;
+        ctx.shadowColor = "rgb(190, 190, 190)";
+        ctx.shadowOffsetX = 5;
+        ctx.shadowOffsetY = 5;
+        ctx.font = "60px Verdana"; 
 
-        ctx.restore();
+        ctx.fillText("Game Over!!!", this.x+50, this.y+100);
 
     }
-    update(newMessage){
+    update(){
 
-        if (newMessage != undefined){
-            this.message = newMessage;
-        } 
     }
 }
 class Vitamin{
@@ -320,16 +286,46 @@ class Vitamin{
     draw(){
 
         // console.log("creating new vitamin!");
-        ctx.save();
+
+
+            // ctx.beginPath();
+            // ctx.arc(180, 60, 10, 0, 2 * Math.PI, false);
+            // ctx.fillStyle = "rgb(0, 0, 255)";
+            // ctx.fill();
+            // ctx.strokeStyle = "black";
+            // ctx.stroke();
+
+        // ctx.beginPath();
+        // ctx.arc(this.x+80, this.y+80, 7, 0, 2 * Math.PI, false);
+        // ctx.fillStyle = 'green';
+        // ctx.fill();
+        // ctx.lineWidth = 5;
+        // ctx.strokeStyle = '#003300';
+        // ctx.stroke();   
+        // ctx.closePath();
+
+        // ctx.beginPath();
+        // ctx.arc(100, 100, 50, 0.25 * Math.PI, 1.25 * Math.PI, false);
+        // ctx.fillStyle = "rgb(255, 255, 0)";
+        // ctx.fill();
+        // ctx.beginPath();
+        // ctx.arc(100, 100, 50, 0.75 * Math.PI, 1.75 * Math.PI, false);
+        // ctx.fill();
+        // ctx.beginPath();
+        // ctx.arc(100, 75, 10, 0, 2 * Math.PI, false);
+        // ctx.fillStyle = "rgb(0, 0, 0)";
+        // ctx.fill();
+
         ctx.beginPath();   
         ctx.arc(this.x, this.y, 7, 0, Math.PI*2, false);
         ctx.fillStyle = 'red';
         ctx.fill();
         ctx.strokeStyle = "black";
-        ctx.stroke();  
-        //ctx.closePath();
-        ctx.restore();
-
+        ctx.stroke();
+        // ctx.lineWidth = 5;
+        // ctx.strokeStyle = '#003300';
+        // ctx.stroke();   
+        ctx.closePath();
     }
     update(){
 
@@ -338,12 +334,12 @@ class Vitamin{
 function gameLoop(){
 
     // console.log("Game is On!!");
-    if(!gameOver) {
+    if(gameOver==false) {
 
         AnimationId = requestAnimationFrame(gameLoop);
 
-        // TODO: Use when want to keep it moving automatically
-        update();
+        // TDO: Use when want to keep it moving automatically
+        //update();
         paint();
 
     } else {
@@ -352,8 +348,8 @@ function gameLoop(){
         cancelAnimationFrame(AnimationId)
         console.log("gameOver: " + gameOver);
           
-        oMessageBox = new MessageBox((canvas.width/2)-100, (canvas.height/2)-40, 200, 80, 'black', 'yellow', "20px Courier", "Game Over!!!");
-        oMessageBox.draw("GameOver");
+        oMessageBox = new MessageBox(canvas.width/4, canvas.height/4, 'White', "Game Over!!!", 200, 80)
+        oMessageBox.draw();
         
     }
 }
@@ -366,20 +362,8 @@ function paint(){
     ctx.fillStyle = 'rgb(0, 0, 0, 0.3)';
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // creating dashbaord
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, 0,  canvas.width-2, dashboardHeight);
-    ctx.fillStyle = 'white';
-    ctx.strokeStyle = 'green'
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
-
     oSnake.draw();
     oVitamin.draw();
-    oTimeBox.draw(getTime().toString());
-    oScoreBox.draw("Score: " + score);
 
 }
 function update(){
@@ -387,16 +371,24 @@ function update(){
     // console.log("update.enter")
 
     oSnake.update();
-    oScoreBox.update()
-    oTimeBox.update(getTime());
-
 
     // if player tries to move off the board prevent that (LE: No need for this game)
-    if(oSnake.y <= dashboardHeight-20 || oSnake.y >= canvas.height){
+    //If player tries to move off the board prevent that (LE: No need for this game)
+    if(oSnake.y <= 0){
+        gameOver=true;
+    } else if(oSnake.y >= (canvas.height)){
+        gameOver=true;
+    }
+    if(oSnake.y <= -20){
         gameOver = true;
-    } else if(oSnake.x<=0 || oSnake.x >= (canvas.width-20)){
+    } else if(oSnake.x<=-20){
         gameOver = true;
     }
+    // if(oSnake.y <= -20 || oSnake.y >= canvas.height){
+    //     gameOver = true;
+    // } else if(oSnake.x<=-20 || oSnake.x >= (canvas.width)){
+    //     gameOver = true;
+    // }
 }
 function MovePlayerPaddle(key){
 
@@ -423,16 +415,7 @@ function MovePlayerPaddle(key){
     // Handle right arrow and d input
     if(key.keyCode === 39 || key.keyCode === 68) oSnake.move = DIRECTION.RIGHT;
     
-    //  ATTENTION: this is only for when we running a stepped game
-    //  update();
+    update();
 
     // console.log("key.code: " + key.keyCode)
-}
-function getTime(){
-
-    let clock = today.getHours().toString()   + ":" + 
-                today.getMinutes().toString() + ":" + 
-                today.getSeconds().toString();
-    
-                return clock;
 }

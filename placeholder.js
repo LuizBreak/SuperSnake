@@ -33,8 +33,8 @@ function SetupCanvas(){
     // working with Canvas
     ctx = canvas.getContext('2d');
 
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
+    canvas.width = canvas.width;
+    canvas.height = canvas.height;
 
     document.addEventListener('keydown', MovePlayerPaddle);
 
@@ -75,8 +75,8 @@ class Snake {
         let tilePosX = this.previousX;
         let tilePosY = this.previousY;
 
-        console.log("constructor-x.y: " + this.x + "-" + this.y);
-        console.log("constructor-Posx.Posy: " + tilePosX + "-" + tilePosY);
+        // console.log("constructor-x.y: " + this.x + "-" + this.y);
+        // console.log("constructor-Posx.Posy: " + tilePosX + "-" + tilePosY);
 
         // adding default tiles to initial body
         for (let index = 0; index < 3; index++) {
@@ -84,8 +84,8 @@ class Snake {
             tilePosX -= 25;
             // tilePosY = tilePosY;    // Y does not change fo the initial setup       
         }
-        console.log("Snake.constructor.1");
-        console.log(this.snappedTiles)
+        // console.log("Snake.constructor.1");
+        // console.log(this.snappedTiles)
     }
     get x() {
         return this._x;
@@ -122,8 +122,8 @@ class Snake {
         ctx.fillStyle = 'yellow';
         ctx.stroke()
         
-        console.log("draw.1");
-        console.log(this.snappedTiles)
+        // console.log("draw.1");
+        // console.log(this.snappedTiles)
 
         //save head's positon for next tile
         let tilePosX = this.previousX;
@@ -145,8 +145,8 @@ class Snake {
             // tilePosY = currentTile.previousY
 
         }
-        console.log("draw.2");
-        console.log(this.snappedTiles)
+        // console.log("draw.2");
+        // console.log(this.snappedTiles)
     }
     SetPreviousPos(){
 
@@ -179,7 +179,7 @@ class Snake {
         let tilePosX = this.previousX;
         let tilePosY = this.previousY;
 
-        console.log("SetPrev->Posx.Posy: " + tilePosX + "-" + tilePosY);
+        // console.log("SetPrev->Posx.Posy: " + tilePosX + "-" + tilePosY);
 
         //Draw individual tiles into cuerpo
         for (let index = 0; index < this.snappedTiles.length; index++) {
@@ -198,8 +198,8 @@ class Snake {
             tilePosY = currentTile.previousY
 
         }
-        console.log("SetPos.1");
-        console.log(this.snappedTiles);
+        // console.log("SetPos.1");
+        // console.log(this.snappedTiles);
     }
 }
 class Tile {
@@ -242,7 +242,7 @@ class Tile {
     }
     update(newPosX, newPosY){
 
-        console.log("tile.update.enter: " + this.previousX  + "-" + this.previousY + "-" + newPosX + "-" + newPosY);
+        // console.log("tile.update.enter: " + this.previousX  + "-" + this.previousY + "-" + newPosX + "-" + newPosY);
 
         // save my current postion
         this.previousX = this.x;
@@ -256,7 +256,7 @@ class Tile {
 function gameLoop(){
 
     // console.log("Game is On!!");
-    if(gameOver==false) {
+    if(!gameOver) {
 
         AnimationId = requestAnimationFrame(gameLoop);
         update();
@@ -266,7 +266,6 @@ function gameLoop(){
 
         // Finish the game
         cancelAnimationFrame(AnimationId)
-        console.log("gameOver: " + gameOver);
 
         ctx.font = '30px Arial';
         ctx.textAlign = 'center';
@@ -379,7 +378,7 @@ function placeHolder(){
             // gradient.addColorStop("1.0", "red");
             // // Fill with gradient
             // ctx.fillStyle = gradient;
-            // var tX = innerWidth/2;
+            // var tX = canvas.width/2;
             // var tY = index+50;
             // ctx.fillText("Target Innovations", , 200);
 

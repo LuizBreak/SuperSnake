@@ -5,7 +5,8 @@ body {
 }
 /* # is used to target ids in HTML */
 canvas {
-    background: rgb(187, 189, 187);
-    /* margin-left: 30px;
-       margin-top: 30px; */
+    background: rgb(236, 240, 237);
+    /* margin-left: 50px;
+    margin-right: 50px;
+    margin-top: 30px; */
 }
