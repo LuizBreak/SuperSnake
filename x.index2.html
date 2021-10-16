@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <canvas id="canvas2"></canvas>
+    <div style="display:block;">
+  <img id="source"
+       src="./asset/sprite_0.png"
+       width="300" height="227">
+</div>
+<script>
+
+    const canvas3 = document.getElementById('canvas2');
+    const ctx3 = canvas.getContext('2d');
+    const image = document.getElementById('source');
+
+    image.addEventListener('load', e => {
+    ctx3.drawImage(image, 33, 71, 104, 124, 21, 20, 87, 104);
+    });
+
+    window.onload = function() {
+        var c4 = document.getElementById("canvas2");
+        var ctx4 = c4.getContext("2d");
+        var img = document.getElementById("source");
+        ctx4.drawImage(img, 10, 10);
+    };
+
+
+</script>
+</body>
+</html>

@@ -1,26 +1,42 @@
+/*
 * {
     box-sizing: border-box;
 }
-.floor{
+*/
+
+/* .floor{
     position: absolute;
     top: 100;
     left: 0;
     width: 100%;
     height: 100%;
     background: blue;
-    background: url('./asset/grass00.png');
-} 
+    /* background: url('./asset/grass00.png'); */
+/* }  */
+
+
 body {
     text-align: center;
-    /* background: rgb(19, 48, 129); */
+    background: linear-gradient(
+        0deg,
+        rgba( 34, 193, 195, 1) 0%,
+        rgba(253, 187,  45, 1) 100%
+    );
+    /* overflow: hidden; hidding scroll bars */
     /* background: url('./asset/grass00.png'); */
     margin: 0;
 }
+
 /* # is used to target ids in HTML */
+
 canvas {
-    background: url('./asset/grass00.png');
-    /* background: rgb(236, 240, 237); */
-    /* /* margin-left: 50px;
-    margin-right: 50px;
-    margin-top: 30px; */
+    /* background: url('./asset/grass00.png'); */
+    background: rgb(38, 187, 75);
+    /* background: rgb(84, 165, 231); */
+    /* margin-left: 50px; */
+    /* margin-right: 50px; */
+    /* margin-top: 30px; */
+}
+#source {
+    display: none;
 }

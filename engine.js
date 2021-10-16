@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', SetupCanvas);
 
 let running = false;
 let gameOver = false;
-let gameStarted = false;
+let gamePaused = false;
 
 let score = 0;
 let dashboardHeight = 40;
@@ -35,10 +35,11 @@ function SetupCanvas(){
 
     // Context provides functions used for drawing and 
     // working with Canvas
+
     ctx = canvas.getContext('2d');
 
     canvas.width = innerWidth * 0.50;
-    canvas.height = innerHeight * 0.70;
+    canvas.height = innerHeight * 0.70
 
     document.addEventListener('keydown', MovePlayerPaddle);
 
@@ -49,7 +50,7 @@ function SetupCanvas(){
     oSnake.grow(1);
     oSnake.draw();
 
-    oVitamin = new Vitamin(150,180);
+    oVitamin = new Vitamin(150, 180);
     oVitamin.draw();
 
     oScoreBox = new MessageBox(5, 5, 150, 30, 'black', 'yellow', "20px Courier", "Score: 0");
@@ -59,7 +60,6 @@ function SetupCanvas(){
     oSnake.draw();
 
     paint();
-
 
 }
 class Snake {
@@ -314,16 +314,20 @@ class Vitamin{
     }
     draw(){
 
+        // draw apple
         // console.log("creating new vitamin!");
+
         ctx.save();
+        ctx.fillStyle = 'red';
+        ctx.strokeStyle = "black";
         ctx.beginPath();   
         ctx.arc(this.x, this.y, 7, 0, Math.PI*2, false);
-        ctx.fillStyle = 'red';
         ctx.fill();
-        ctx.strokeStyle = "black";
         ctx.stroke();  
-        //ctx.closePath();
+        ctx.closePath();
         ctx.restore();
+
+        drawVitamin(this.x, this.y);
 
     }
     update(){
@@ -332,10 +336,20 @@ class Vitamin{
 }
 function gameLoop(){
 
-    // console.log("Game is On!!");
-    if(!gameOver) {
+    console.log("Try Pause it now: " + running + ", " + gameOver, ", " + gamePaused)
+    
+    if(gamePaused){
 
-        gameStarted = true;
+        cancelAnimationFrame(AnimationId)            
+        oMessageBox = new MessageBox((canvas.width/2)-100, (canvas.height/2)-40, 200, 80, 'black', 'yellow', "20px Courier", "Game Paused!!!");
+        oMessageBox.draw("Game Paused!!!");
+        return;
+    } 
+ 
+    // console.log("Game is On!!");
+    if(!gameOver && !gamePaused) {
+
+        console.log("run it then!")
         // AnimationId = requestAnimationFrame(gameLoop);
         requestAnimationFrame(laggedRequestAnimationFrame)
 
@@ -377,10 +391,6 @@ function paint(){
     oVitamin.draw();
     oTimeBox.draw(getTime().toString());
     oScoreBox.draw("Score: " + score);
-
-    // draw apple
-    // ctx.drawImage( './asset/sprite_0.png', 1, 1, 10,10,100,100,10,10);
-
 }
 function update(){
 
@@ -392,35 +402,43 @@ function update(){
 
 
     // if player tries to move off the board prevent that (LE: No need for this game)
-    if(oSnake.y <= dashboardHeight-20 || oSnake.y >= canvas.height){
+    if(oSnake.y < 55 || oSnake.y >= canvas.height-20){
         gameOver = true;
-    } else if(oSnake.x<=0 || oSnake.x >= (canvas.width-20)){
+    } else if(oSnake.x<0 || oSnake.x >= (canvas.width-20)){
         gameOver = true;
     }
 }
 function MovePlayerPaddle(key){
 
-    // console.log("running: " + running + " - game started : " + gameStarted);
 
-    if(running === false){
+    if ((key.keyCode === 32)  && (running == true)){
+
+        // reset pause the game
+        gamePaused = !gamePaused;
+        console.log("gamePaused: " + gamePaused);
+        gameLoop();
+        return;
+
+    } else if(running === false){
+
+        // game started
         running = true;
-        gameStarted == true;
-        // window.requestAnimationFrame(gameLoop);
-        // window.onload = setInterval(gameLoop);
+        gamePaused = false;
         requestAnimationFrame(laggedRequestAnimationFrame)
+        oSnake.move = DIRECTION.RIGHT; 
     }
-    
+
     switch (true) {
         
         // Handle scape as game over
         case (key.keyCode === 27):      
-            gameOver = true;
+            if (!gamePaused) gameOver = true;
             break;
 
         // Handle space bar for PAUSE
-        case (key.keyCode === 32):
-            running = true;
-            break;
+        // case (key.keyCode === 32):
+        //     running = true;
+        //     break;
 
         // Handle up arrow and w input
         case (key.keyCode === 38 || key.keyCode === 87) && oSnake.move != DIRECTION.DOWN: 
@@ -460,10 +478,25 @@ function getTime(){
                 return clock;
 }
 
-var fps = 10
+var fps = 3
 // Article reference: http://www.javascriptkit.com/javatutors/requestanimationframe.shtml
 function laggedRequestAnimationFrame(timestamp){
     setTimeout(function(){ //throttle requestAnimationFrame to 20fps
         AnimationId = requestAnimationFrame(gameLoop);
     }, 1000/fps)
+}
+
+function drawVitamin(x, y){
+
+    // Image implementation (both work with not error by the image does not show)
+    const appleImg  = new Image();
+    appleImg.src = './asset/sprite_0.png'
+
+    var img = document.getElementById("source");
+
+    console.log(x + ", " + y) 
+
+    ctx.drawImage(appleImg, x, y);
+    ctx.drawImage(appleImg, 1, 1, 104, 124, x+10, y+10, 87, 104);
+        
 }
