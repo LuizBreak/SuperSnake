@@ -1,6 +1,9 @@
 // Call for our function to execute when page is loaded
 document.addEventListener('DOMContentLoaded', SetupCanvas);
 
+// for testing purpose only manage moves manually
+let steppedGame = true;
+
 let running = false;
 let gameOver = false;
 let gamePaused = false;
@@ -15,6 +18,7 @@ let oVitamin;
 let oMessageBox;
 let oTimeBox;
 let oScoreBox;
+let particles = [];
 
 var today = new Date();
 
@@ -50,14 +54,11 @@ function SetupCanvas(){
     oSnake.grow(1);
     oSnake.draw();
 
-    oVitamin = new Vitamin(150, 180);
+    oVitamin = new Vitamin(0, 0);
     oVitamin.draw();
 
     oScoreBox = new MessageBox(5, 5, 150, 30, 'black', 'yellow', "20px Courier", "Score: 0");
     oTimeBox = new MessageBox(canvas.width-158, 5, 152, 30, 'black', 'yellow', "20px Courier", getTime());
-
-    oSnake.grow(5);
-    oSnake.draw();
 
     paint();
 
@@ -71,6 +72,9 @@ class Snake {
         
         this.x = x;
         this.y = y;
+
+        this.width = 20;
+        this.height = 20;
 
         this.prevX = x-20;
         this.prevY = y;
@@ -95,7 +99,7 @@ class Snake {
 
         // draw head
         ctx.fillStyle = "yellow";
-        ctx.fillRect(this.x, this.y, 20, 20);
+        ctx.fillRect(this.x, this.y, this.width, this.height);
 
         // draw ojo
         ctx.beginPath();
@@ -167,7 +171,7 @@ class Snake {
 
         }
         // console.log("update.updatePrevious.2");
-        // console.log(this.snappedTiles)
+        console.log(this.snappedTiles)
     }
     grow(numberOfTiles){
 
@@ -191,11 +195,12 @@ class Snake {
             }
         }
 
-        // console.log("grow h(x.y): " + this.x + ", " + this.y);
-        // console.log("grow Prev(Posx.Posy): " + tilePosX + ", " + tilePosY);
+        //console.log("grow h(x.y): " + this.x + ", " + this.y);
+        //console.log("grow Prev(Posx.Posy): " + tilePosX + ", " + tilePosY);
 
         // adding default tiles to initial body
         for (let index = 0; index < numberOfTiles; index++) {
+            console.log("tile: " + index); 
             this.snappedTiles.push(new Tile(tilePosX, tilePosY, this.velocity, "pink", "@", tilePosX-20, tilePosY))
             tilePosX -= 20; // TODO: Check if whether of not the head should always grow to the right???
             //tilePosY -= tilePosY;    // Y does not change for the initial setup       
@@ -281,13 +286,15 @@ class MessageBox{
         // creating rectangle
         ctx.beginPath();
         ctx.rect(this.x, this.y, this.wWith, this.wHeight);
- 
+        
         ctx.fillStyle = this.bgColor;
         ctx.fill();
 
         ctx.strokeStyle = 'green'
+        ctx.lineWidth = 3;
         ctx.stroke();
-
+        
+        ctx.closePath();
         // console.log("MessageBox: -> x: " + this.x + " y: " + this.y + " Width: " + this.wWith + " Height: " + this.wHeight);
 
         ctx.fillStyle = this.foreColor;
@@ -311,20 +318,33 @@ class Vitamin{
         this.x = x;
         this.y = y;
 
+        this.width = 20;
+        this.height = 20;
+
     }
     draw(){
+
+        this.move();
 
         // draw apple
         // console.log("creating new vitamin!");
 
+        // ctx.save();
+        // ctx.fillStyle = 'white';
+        // ctx.strokeStyle = "black";
+        // ctx.beginPath();   
+        // ctx.arc(this.x, this.y, 10, 0, Math.PI*2, false);
+        // ctx.fill();
+        // ctx.stroke();  
+        // ctx.closePath();
+        // ctx.restore();
+        // console.log(this.x + " - " + this.y);
+
         ctx.save();
-        ctx.fillStyle = 'red';
-        ctx.strokeStyle = "black";
-        ctx.beginPath();   
-        ctx.arc(this.x, this.y, 7, 0, Math.PI*2, false);
+        ctx.beginPath();
+        ctx.fillStyle = 'white';
+        ctx.fillRect(this.x, this.y, this.width, this.height);
         ctx.fill();
-        ctx.stroke();  
-        ctx.closePath();
         ctx.restore();
 
         drawVitamin(this.x, this.y);
@@ -333,15 +353,67 @@ class Vitamin{
     update(){
 
     }
+
+    move(){
+        this.x = Math.random()* canvas.width-40;
+        this.y = Math.random()*(canvas.height-40);
+
+        // ensure to discount the dashboard space
+        if(this.y < 50) this.y = 60;
+        console.log("x: " + this.x + " y: " + this.y)
+    }
+
+    #drawImage(x, y){
+
+        // Image implementation (both work with not error by the image does not show)
+        const appleImg  = new Image();
+        appleImg.src = './asset/sprite_0.png'
+
+        var img = document.getElementById("source");
+
+        // console.log(x + ", " + y) 
+        //ctx.drawImage(appleImg, x, y);
+        ctx.drawImage(appleImg, 1, 1, 104, 124, x-22, y-18, 80, 80);
+    }
 }
+class Particle {
+
+    constructor(x, y, radius, velocity, color){
+
+        this.radius = radius;
+        this.color = color;
+
+        this.x = x;
+        this.y = y;
+
+        this.velocity = velocity;
+        this.alpha = 1;
+    }
+    draw(){
+        ctx.save();
+        canvas.globalAlpha = this.alpha;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.restore();
+    }
+    update(){
+        this.x = this.x + this.velocity.x;
+        this.y = this.y + this.velocity.y;
+        this.alpha -=  0.10 ;
+    }
+}
+
+
 function gameLoop(){
 
-    console.log("Try Pause it now: " + running + ", " + gameOver, ", " + gamePaused)
+    // console.log("Try Pause it now: " + running + ", " + gameOver, ", " + gamePaused)
     
     if(gamePaused){
 
         cancelAnimationFrame(AnimationId)            
-        oMessageBox = new MessageBox((canvas.width/2)-100, (canvas.height/2)-40, 200, 80, 'black', 'yellow', "20px Courier", "Game Paused!!!");
+        oMessageBox = new MessageBox((canvas.width/2)-100, (canvas.height/2)-40, 250, 80, 'black', 'red', "20px Courier", "Game Paused!!!");
         oMessageBox.draw("Game Paused!!!");
         return;
     } 
@@ -349,9 +421,9 @@ function gameLoop(){
     // console.log("Game is On!!");
     if(!gameOver && !gamePaused) {
 
-        console.log("run it then!")
+        // console.log("run it then!")
         // AnimationId = requestAnimationFrame(gameLoop);
-        requestAnimationFrame(laggedRequestAnimationFrame)
+        if(!steppedGame) requestAnimationFrame(laggedRequestAnimationFrame)
 
         // TODO: Use when want to keep it moving automatically
         update();
@@ -359,12 +431,14 @@ function gameLoop(){
 
     } else {
 
-        // Finish the game
-        cancelAnimationFrame(AnimationId)
-        console.log("gameOver: " + gameOver);
+        setGameOver();
+
+        // // Finish the game
+        // cancelAnimationFrame(AnimationId)
+        // // console.log("gameOver: " + gameOver);
           
-        oMessageBox = new MessageBox((canvas.width/2)-100, (canvas.height/2)-40, 200, 80, 'black', 'yellow', "20px Courier", "Game Over!!!");
-        oMessageBox.draw("GameOver");
+        // oMessageBox = new MessageBox((canvas.width/2)-100, (canvas.height/2)-40, 200, 80, 'black', 'red', "20px Courier", "Game Over!!!");
+        // oMessageBox.draw("GameOver");
         
     }
 }
@@ -391,6 +465,21 @@ function paint(){
     oVitamin.draw();
     oTimeBox.draw(getTime().toString());
     oScoreBox.draw("Score: " + score);
+
+    // Draw particles
+    particles.forEach((particle, particleIndex) => {
+
+        if (particle.alpha <= 0) {
+            // after alpha hit < 0 the particle reappears on the screen. 
+            // let's make sure that does not happe
+            particles.splice(particleIndex, 1)
+        } else {
+            // console.log("show particles on screeen")
+            //  console.log(particle);
+            particle.update();
+            particle.draw();    
+        }
+    })
 }
 function update(){
 
@@ -407,6 +496,20 @@ function update(){
     } else if(oSnake.x<0 || oSnake.x >= (canvas.width-20)){
         gameOver = true;
     }
+
+    
+    // console.log("f1: " + recCollisionDectetion(oSnake, oVitamin));
+    if(recCollisionDectetion(oSnake, oVitamin)) {
+        // console.log("Collision detected");
+        // if (!gamePaused) gameOver = true;
+        // setGameOver();
+
+        // circle explosion
+        splashIt(oVitamin, 'red');
+        setTimeout(function(){ oSnake.grow(1);}, 1000);
+        oVitamin.move();
+        
+    }
 }
 function MovePlayerPaddle(key){
 
@@ -415,7 +518,7 @@ function MovePlayerPaddle(key){
 
         // reset pause the game
         gamePaused = !gamePaused;
-        console.log("gamePaused: " + gamePaused);
+        // console.log("gamePaused: " + gamePaused);
         gameLoop();
         return;
 
@@ -424,7 +527,7 @@ function MovePlayerPaddle(key){
         // game started
         running = true;
         gamePaused = false;
-        requestAnimationFrame(laggedRequestAnimationFrame)
+        if (!steppedGame) requestAnimationFrame(laggedRequestAnimationFrame)
         oSnake.move = DIRECTION.RIGHT; 
     }
 
@@ -467,7 +570,8 @@ function MovePlayerPaddle(key){
         default:
             break;
     }
-    console.log("key.code: " + key.keyCode)
+    // console.log("key.code: " + key.keyCode)
+    if(steppedGame) gameLoop();
 }
 function getTime(){
 
@@ -478,14 +582,13 @@ function getTime(){
                 return clock;
 }
 
-var fps = 3
+var fps = 5 
 // Article reference: http://www.javascriptkit.com/javatutors/requestanimationframe.shtml
 function laggedRequestAnimationFrame(timestamp){
     setTimeout(function(){ //throttle requestAnimationFrame to 20fps
         AnimationId = requestAnimationFrame(gameLoop);
     }, 1000/fps)
 }
-
 function drawVitamin(x, y){
 
     // Image implementation (both work with not error by the image does not show)
@@ -494,9 +597,70 @@ function drawVitamin(x, y){
 
     var img = document.getElementById("source");
 
-    console.log(x + ", " + y) 
-
-    ctx.drawImage(appleImg, x, y);
-    ctx.drawImage(appleImg, 1, 1, 104, 124, x+10, y+10, 87, 104);
+    // console.log(x + ", " + y) 
+    //ctx.drawImage(appleImg, x, y);
+    ctx.drawImage(appleImg, 1, 1, 104, 124, x-22, y-18, 80, 80);
         
 }
+function recCollisionDectetion(targetA, targetB) {
+    return !(targetB.x > (targetA.x + targetA.width) || 
+             (targetB.x + targetB.width) < targetA.x || 
+             targetB.y > (targetA.x + targetA.height) ||
+             (targetB.y + targetB.height) < targetA.y);
+  }
+function circleCollisionDetection(circle1, circle2){
+
+    // Article reference: https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
+
+    var dx = (circle1.x + circle1.radius) - (circle2.x + circle2.radius);
+    var dy = (circle1.y + circle1.radius) - (circle2.y + circle2.radius);
+    var distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < circle1.radius + circle2.radius) {
+        // collision detected!
+        // this.color = "green";
+        return true;
+    } else {
+        // no collision
+        // this.color = "blue";
+        return false;
+    }
+}
+// return true if the rectangle and circle are colliding
+function RectToCircleColliding(circle, rect){
+
+    // console.log("cicle: x-" + circle.x + " y-" + circle.y);
+
+    var distX = Math.abs(circle.x - rect.x-rect.w/2);
+    var distY = Math.abs(circle.y - rect.y-rect.h/2);
+
+    if (distX > (rect.w/2 + circle.r)) { return false; }
+    if (distY > (rect.h/2 + circle.r)) { return false; }
+
+    if (distX <= (rect.w/2)) { return true; } 
+    if (distY <= (rect.h/2)) { return true; }
+
+    var dx=distX-rect.w/2;
+    var dy=distY-rect.h/2;
+    return (dx*dx+dy*dy<=(circle.r*circle.r));
+}
+function setGameOver(){
+
+    // Finish the game
+    cancelAnimationFrame(AnimationId)
+        
+    oMessageBox = new MessageBox((canvas.width/2)-100, (canvas.height/2)-40, 200, 80, 'black', 'red', "20px Courier", "Game Over!!!");
+    oMessageBox.draw("GameOver");
+    
+}
+function splashIt(target, color){
+
+    // console.log("Boom - Enemy Splased!!!")
+
+    for (let index = 0; index < 2   ; index++) {
+        // particles.push(new Particle(target.x, target.y, 3, {x: Math.random()-0.5, y: Math.random()-0.5}, color))    
+        particles.push(new Particle(target.x, target.y, 3,   {x: Math.random()*10-5, y: Math.random()*10-5}, color))    
+    }
+    // console.log(particles)
+}
+
