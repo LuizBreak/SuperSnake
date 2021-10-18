@@ -18,6 +18,8 @@ let oVitamin;
 let oMessageBox;
 let oTimeBox;
 let oScoreBox;
+let oGameTitle;
+
 let particles = [];
 
 var today = new Date();
@@ -42,24 +44,25 @@ function SetupCanvas(){
 
     ctx = canvas.getContext('2d');
 
-    canvas.width = innerWidth * 0.50;
-    canvas.height = innerHeight * 0.70
+    canvas.width = Math.floor(innerWidth * 0.50);
+    canvas.height = Math.floor(innerHeight * 0.70)
 
     document.addEventListener('keydown', MovePlayerPaddle);
 
     gameOver = false;
     running = false;
 
-    oSnake = new Snake(canvas.width/2, canvas.height/2, 'green');
+    oSnake = new Snake(canvas.width/2, canvas.height/2, 'yellow');
     oSnake.grow(1);
     oSnake.draw();
 
     oVitamin = new Vitamin(0, 0);
+    oVitamin.move();    
     oVitamin.draw();
 
-    oScoreBox = new MessageBox(5, 5, 150, 30, 'black', 'yellow', "20px Courier", "Score: 0");
+    oScoreBox = new MessageBox(5, 5, 150, 30, 'black', 'yellow', "20px Courier", "Score: " + score);
     oTimeBox = new MessageBox(canvas.width-158, 5, 152, 30, 'black', 'yellow', "20px Courier", getTime());
-
+    oGameTitle = new MessageBox((canvas.width/2)-75, 5, 150, 30, 'white', 'red', "20px Courier", "  Snake");
     paint();
 
 }
@@ -86,9 +89,12 @@ class Snake {
         this.velocity = 20;
         this.snappedTiles = [];
 
+        this.length = 0;
+
        // save head's positon for next tile
        let tilePosX = this.prevX;
        let tilePosY = this.prevY;
+
 
         // console.log("Snake.constructor.1");
         // console.log(this.snappedTiles)
@@ -98,7 +104,7 @@ class Snake {
         ctx.save();
 
         // draw head
-        ctx.fillStyle = "yellow";
+        ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
 
         // draw ojo
@@ -171,7 +177,7 @@ class Snake {
 
         }
         // console.log("update.updatePrevious.2");
-        console.log(this.snappedTiles)
+        // console.log(this.snappedTiles)
     }
     grow(numberOfTiles){
 
@@ -200,8 +206,9 @@ class Snake {
 
         // adding default tiles to initial body
         for (let index = 0; index < numberOfTiles; index++) {
-            console.log("tile: " + index); 
-            this.snappedTiles.push(new Tile(tilePosX, tilePosY, this.velocity, "pink", "@", tilePosX-20, tilePosY))
+            // console.log("tile: " + index); 
+            this.length +=1;
+            this.snappedTiles.push(new Tile(tilePosX, tilePosY, this.velocity, "pink", this.length, tilePosX-20, tilePosY))
             tilePosX -= 20; // TODO: Check if whether of not the head should always grow to the right???
             //tilePosY -= tilePosY;    // Y does not change for the initial setup       
         }
@@ -291,7 +298,7 @@ class MessageBox{
         ctx.fill();
 
         ctx.strokeStyle = 'green'
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         ctx.stroke();
         
         ctx.closePath();
@@ -324,7 +331,7 @@ class Vitamin{
     }
     draw(){
 
-        this.move();
+        // this.move();
 
         // draw apple
         // console.log("creating new vitamin!");
@@ -342,7 +349,7 @@ class Vitamin{
 
         ctx.save();
         ctx.beginPath();
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = 'blank'; // TODO: make it transparent
         ctx.fillRect(this.x, this.y, this.width, this.height);
         ctx.fill();
         ctx.restore();
@@ -355,14 +362,15 @@ class Vitamin{
     }
 
     move(){
-        this.x = Math.random()* canvas.width-40;
-        this.y = Math.random()*(canvas.height-40);
+        this.x = Math.floor(Math.random() * canvas.width-40);
+        this.y = Math.floor(Math.random() * canvas.height-40);
 
         // ensure to discount the dashboard space
         if(this.y < 50) this.y = 60;
-        console.log("x: " + this.x + " y: " + this.y)
+        console.log("vitamin moved to x: " + this.x + " y: " + this.y)
     }
 
+    // TODO : how to implement private methods in javascrip?
     #drawImage(x, y){
 
         // Image implementation (both work with not error by the image does not show)
@@ -425,7 +433,6 @@ function gameLoop(){
         // AnimationId = requestAnimationFrame(gameLoop);
         if(!steppedGame) requestAnimationFrame(laggedRequestAnimationFrame)
 
-        // TODO: Use when want to keep it moving automatically
         update();
         paint();
 
@@ -465,17 +472,19 @@ function paint(){
     oVitamin.draw();
     oTimeBox.draw(getTime().toString());
     oScoreBox.draw("Score: " + score);
+    oGameTitle.draw();
+
 
     // Draw particles
     particles.forEach((particle, particleIndex) => {
 
         if (particle.alpha <= 0) {
             // after alpha hit < 0 the particle reappears on the screen. 
-            // let's make sure that does not happe
+            // let's make sure that does not happen
             particles.splice(particleIndex, 1)
         } else {
             // console.log("show particles on screeen")
-            //  console.log(particle);
+            // console.log(particle);
             particle.update();
             particle.draw();    
         }
@@ -493,12 +502,12 @@ function update(){
     // if player tries to move off the board prevent that (LE: No need for this game)
     if(oSnake.y < 55 || oSnake.y >= canvas.height-20){
         gameOver = true;
-    } else if(oSnake.x<0 || oSnake.x >= (canvas.width-20)){
+    } else if(oSnake.x<=0 || oSnake.x >= (canvas.width-20)){
         gameOver = true;
     }
 
     
-    // console.log("f1: " + recCollisionDectetion(oSnake, oVitamin));
+    console.log("f1: " + recCollisionDectetion(oSnake, oVitamin));
     if(recCollisionDectetion(oSnake, oVitamin)) {
         // console.log("Collision detected");
         // if (!gamePaused) gameOver = true;
@@ -506,9 +515,10 @@ function update(){
 
         // circle explosion
         splashIt(oVitamin, 'red');
-        setTimeout(function(){ oSnake.grow(1);}, 1000);
         oVitamin.move();
-        
+        addScore();
+        oScoreBox = new MessageBox(5, 5, 150, 30, 'black', 'yellow', "20px Courier", "Score: " + score);
+        setTimeout(function(){ oSnake.grow(1);}, 1000);
     }
 }
 function MovePlayerPaddle(key){
@@ -582,7 +592,7 @@ function getTime(){
                 return clock;
 }
 
-var fps = 5 
+var fps = 10 
 // Article reference: http://www.javascriptkit.com/javatutors/requestanimationframe.shtml
 function laggedRequestAnimationFrame(timestamp){
     setTimeout(function(){ //throttle requestAnimationFrame to 20fps
@@ -599,7 +609,7 @@ function drawVitamin(x, y){
 
     // console.log(x + ", " + y) 
     //ctx.drawImage(appleImg, x, y);
-    ctx.drawImage(appleImg, 1, 1, 104, 124, x-22, y-18, 80, 80);
+    ctx.drawImage(appleImg, 1, 1, 104, 124, x-14, y-7, 80, 80);
         
 }
 function recCollisionDectetion(targetA, targetB) {
@@ -607,7 +617,7 @@ function recCollisionDectetion(targetA, targetB) {
              (targetB.x + targetB.width) < targetA.x || 
              targetB.y > (targetA.x + targetA.height) ||
              (targetB.y + targetB.height) < targetA.y);
-  }
+}
 function circleCollisionDetection(circle1, circle2){
 
     // Article reference: https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
@@ -657,10 +667,12 @@ function splashIt(target, color){
 
     // console.log("Boom - Enemy Splased!!!")
 
-    for (let index = 0; index < 2   ; index++) {
+    for (let index = 0; index < 8   ; index++) {
         // particles.push(new Particle(target.x, target.y, 3, {x: Math.random()-0.5, y: Math.random()-0.5}, color))    
-        particles.push(new Particle(target.x, target.y, 3,   {x: Math.random()*10-5, y: Math.random()*10-5}, color))    
+        particles.push(new Particle(target.x, target.y, 3,   {x: Math.floor(Math.random())*10-5, y: Math.floor(Math.random())*10-5}, color))    
     }
     // console.log(particles)
 }
-
+function addScore(){
+    score += 5;
+}

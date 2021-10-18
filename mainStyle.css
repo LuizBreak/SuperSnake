@@ -30,7 +30,7 @@ body {
 /* # is used to target ids in HTML */
 
 canvas {
-    background: url('./asset/grass00.png');
+    background: url('./asset/sprite_0.png');
     /* background: rgb(38, 187, 75); */
     /* background: rgb(84, 165, 231); */
     /* margin-left: 50px; */
