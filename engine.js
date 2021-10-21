@@ -1,8 +1,9 @@
 // Call for our function to execute when page is loaded
 document.addEventListener('DOMContentLoaded', SetupCanvas);
 
+
 // for testing purpose only manage moves manually
-let steppedGame = true;
+let steppedGame = false;
 
 let running = false;
 let gameOver = false;
@@ -20,9 +21,14 @@ let oTimeBox;
 let oScoreBox;
 let oGameTitle;
 
-let particles = [];
+let today = new Date();
 
-var today = new Date();
+// Article reference: https://www.101computing.net/stopwatch-class-javascript/
+let stopwatch;
+
+let oEat;
+let oCrash;
+let oGameOver;
 
 // Used to monitor whether paddles and ball are
 // moving and in what direction
@@ -44,27 +50,29 @@ function SetupCanvas(){
 
     ctx = canvas.getContext('2d');
 
-    canvas.width = Math.floor(innerWidth * 0.50);
-    canvas.height = Math.floor(innerHeight * 0.70)
+    canvas.width = 620;
+    canvas.height = 280;
 
     document.addEventListener('keydown', MovePlayerPaddle);
 
-    gameOver = false;
-    running = false;
-
-    oSnake = new Snake(canvas.width/2, canvas.height/2, 'yellow');
+    oSnake = new Snake(300, 140, 'yellow');
     oSnake.grow(1);
-    oSnake.draw();
 
     oVitamin = new Vitamin(0, 0);
     oVitamin.move();    
-    oVitamin.draw();
+
+    stopwatch = new Stopwatch("stopWatchDisplay");
+    stopwatch.reset();
 
     oScoreBox = new MessageBox(5, 5, 150, 30, 'black', 'yellow', "20px Courier", "Score: " + score);
-    oTimeBox = new MessageBox(canvas.width-158, 5, 152, 30, 'black', 'yellow', "20px Courier", getTime());
+    oTimeBox = new MessageBox(canvas.width-158, 5, 152, 30, 'black', 'yellow', "20px Courier", stopwatch.update());
     oGameTitle = new MessageBox((canvas.width/2)-75, 5, 150, 30, 'white', 'red', "20px Courier", "  Snake");
-    paint();
 
+    draw();
+
+    oEat = new SoundPlayer('beepSound1', "asset/beep.wav");
+    oCrash = new SoundPlayer('beepSound2', "asset/jump.mp3");
+    oGameOver = new SoundPlayer('beepSound3', "asset/mario-bros-die.mp3");
 }
 class Snake {
 
@@ -87,7 +95,7 @@ class Snake {
 
         // defines how quickly tiles can be moved
         this.velocity = 20;
-        this.snappedTiles = [];
+        this.cuerpo = [];
 
         this.length = 0;
 
@@ -115,12 +123,13 @@ class Snake {
         ctx.strokeStyle = "black"
         ctx.stroke();
 
+
         // console.log("contruct.draw.1");
-        // console.log(this.snappedTiles)
+        // console.log(this.snappedTiles
 
         // draw individual tiles into body
-        for (let index = 0; index < this.snappedTiles.length; index++) {
-            const currentTile = this.snappedTiles[index];
+        for (let index = 0; index < this.cuerpo.length; index++) {
+            const currentTile = this.cuerpo[index];
             currentTile.draw();
         }
         ctx.restore();
@@ -163,11 +172,11 @@ class Snake {
         let tilePosY = this.prevY;
 
         // draw individual tiles into body
-        for (let index = 0; index < this.snappedTiles.length; index++) {
+        for (let index = 0; index < this.cuerpo.length; index++) {
 
             // console.log("Set tile new Postions to -> x: " + tilePosX + " y: " + tilePosY);
             
-            const currentTile = this.snappedTiles[index];
+            const currentTile = this.cuerpo[index];
             currentTile.update(tilePosX, tilePosY);
 
             // set the positon for the next tile
@@ -187,13 +196,13 @@ class Snake {
         // if only head, follow it
         // console.log(this.snappedTiles);
 
-        if (this.snappedTiles.length == 0){
+        if (this.cuerpo.length == 0){
             tilePosX = this.prevX;
             tilePosY = this.prevY; 
             // console.log("follow head at: " + tilePosX + ", " + tilePosY);   
         } else {
             // if not, follow tail
-            let tile = this.snappedTiles[this.snappedTiles.length-1];
+            let tile = this.cuerpo[this.cuerpo.length-1];
             if (tile != undefined){
                 tilePosX = tile.prevX;
                 tilePosY = tile.prevY;      
@@ -208,11 +217,39 @@ class Snake {
         for (let index = 0; index < numberOfTiles; index++) {
             // console.log("tile: " + index); 
             this.length +=1;
-            this.snappedTiles.push(new Tile(tilePosX, tilePosY, this.velocity, "pink", this.length, tilePosX-20, tilePosY))
+            this.cuerpo.push(new Tile(tilePosX, tilePosY, this.velocity, "pink", "#", tilePosX-20, tilePosY))
             tilePosX -= 20; // TODO: Check if whether of not the head should always grow to the right???
             //tilePosY -= tilePosY;    // Y does not change for the initial setup       
         }
 
+    }
+    crashWithBody(tile){
+    
+        let crash = false;
+
+        if ((this.x == tile.x) && (this.y == tile.y)) crash = true;
+        return crash;
+
+    }
+    crashWithOthers(otherObj){
+
+        var myleft = this.x;
+        var myright = this.x + (this.width);
+        var mytop = this.y;
+        var mybottom = this.y + (this.height);
+        var otherleft = otherObj.x;
+        var otherright = otherObj.x + (otherObj.width);
+        var othertop = otherObj.y;
+        var otherbottom = otherObj.y + (otherObj.height);
+        var crash = true;
+
+        if ((mybottom < othertop) ||
+        (mytop > otherbottom) ||
+        (myright < otherleft) ||
+        (myleft > otherright)) {
+            crash = false;
+        }
+        return crash;
     }
 }
 class Tile {
@@ -282,8 +319,8 @@ class MessageBox{
 
         this.message = message;
 
-        let messagePosX = x+50;
-        let messagePosY = y+100;
+        // let messagePosX = x+50;
+        // let messagePosY = y+100;
 
     }
     draw(){
@@ -320,6 +357,8 @@ class MessageBox{
 }
 class Vitamin{
 
+    particles = [];
+
     constructor(x, y){
 
         this.x = x;
@@ -331,21 +370,20 @@ class Vitamin{
     }
     draw(){
 
-        // this.move();
+        // Draw particles
+        this.particles.forEach((particle, particleIndex) => {
 
-        // draw apple
-        // console.log("creating new vitamin!");
-
-        // ctx.save();
-        // ctx.fillStyle = 'white';
-        // ctx.strokeStyle = "black";
-        // ctx.beginPath();   
-        // ctx.arc(this.x, this.y, 10, 0, Math.PI*2, false);
-        // ctx.fill();
-        // ctx.stroke();  
-        // ctx.closePath();
-        // ctx.restore();
-        // console.log(this.x + " - " + this.y);
+            if (particle.alpha <= 0) {
+                // after alpha hit < 0 the particle reappears on the screen. 
+                // let's make sure that does not happen
+                this.particles.splice(particleIndex, 1)
+            } else {
+                // console.log("show particles on screeen")
+                // console.log(particle);
+                particle.update();
+                particle.draw();    
+            }
+        })
 
         ctx.save();
         ctx.beginPath();
@@ -354,23 +392,21 @@ class Vitamin{
         ctx.fill();
         ctx.restore();
 
-        drawVitamin(this.x, this.y);
+        //drawApple(this.x, this.y);
+        this.#drawImage(this.x, this.y)
 
     }
-    update(){
-
-    }
-
     move(){
+
         this.x = Math.floor(Math.random() * canvas.width-40);
         this.y = Math.floor(Math.random() * canvas.height-40);
 
-        // ensure to discount the dashboard space
-        if(this.y < 50) this.y = 60;
-        console.log("vitamin moved to x: " + this.x + " y: " + this.y)
+        // // ensure to discount the dashboard space or any off boundaries
+        if(this.y < 50 || this.y > canvas.height) this.y = 60;
+        if(this.x < 20 || this.x > canvas.width) this.x = 60;
+        
+        // .log("vitamin moved to x: " + this.x + " y: " + this.y)
     }
-
-    // TODO : how to implement private methods in javascrip?
     #drawImage(x, y){
 
         // Image implementation (both work with not error by the image does not show)
@@ -381,7 +417,15 @@ class Vitamin{
 
         // console.log(x + ", " + y) 
         //ctx.drawImage(appleImg, x, y);
-        ctx.drawImage(appleImg, 1, 1, 104, 124, x-22, y-18, 80, 80);
+        ctx.drawImage(appleImg, 1, 1, 104, 124, x-14, y-7, 80, 80);
+    }
+    splashIt(){
+        // console.log("Boom - Enemy Splased!!!")
+        for (let index = 0; index < 4   ; index++) {
+            // particles.push(new Particle(target.x, target.y, 3, {x: Math.random()-0.5, y: Math.random()-0.5}, color))    
+            this.particles.push(new Particle(this.x, this.y, 3,   {x: (Math.random()*10)-5, y: (Math.random()*10)-5}, 'red'))    
+        }
+        //console.log(this.particles)
     }
 }
 class Particle {
@@ -409,20 +453,90 @@ class Particle {
     update(){
         this.x = this.x + this.velocity.x;
         this.y = this.y + this.velocity.y;
-        this.alpha -=  0.10 ;
+        this.alpha -=  0.10;
     }
 }
+class Stopwatch {
+    constructor(id, delay=100) { //Delay in ms
+      this.state = "paused";
+      this.delay = delay;
+      this.display = document.getElementById(id);
+      this.value = 0;
+    }
+    
+    formatTime(ms) {
+      var hours   = Math.floor(ms / 3600000);
+      var minutes = Math.floor((ms - (hours * 3600000)) / 60000);
+      var seconds = Math.floor((ms - (hours * 3600000) - (minutes * 60000)) / 1000);
+      var ds = Math.floor((ms - (hours * 3600000) - (minutes * 60000) - (seconds * 1000))/100);
+   
+      if (hours   < 10) {hours   = "0"+hours;}
+      if (minutes < 10) {minutes = "0"+minutes;}
+      if (seconds < 10) {seconds = "0"+seconds;}
+      return hours+':'+minutes+':'+seconds+'.'+ds;
+    }
+    
+    update() {
+      if (this.state=="running") {
+        this.value += this.delay;
+      }
+      //this.display.innerHTML = this.formatTime(this.value);
+      return this.formatTime(this.value);
+    }
+    
+    start() {
+      if (this.state=="paused") {
+        this.state="running";
+        if (!this.interval) {
+          var t=this;
+          this.interval = setInterval(function(){t.update();}, this.delay);
+        }
+      }
+    }
+    
+    stop() {
+         if (this.state=="running") {
+        this.state="paused";
+      if (this.interval) {
+        clearInterval(this.interval);
+        this.interval = null;
+      }
+         }
+    }
+    
+    reset() {
+      this.stop();
+      this.value=0;
+      this.update();
+    }
+}
+class SoundPlayer {
 
+    // Used to play sounds when requested
+    #beepSound;
 
+    constructor(id, source){
+
+        // Allow for playing sound
+        this.#beepSound = document.getElementById(id);
+        this.#beepSound.src = source;
+        console.log(this.#beepSound)
+    }
+
+    play(){
+        this.#beepSound.play();
+    }
+}
 function gameLoop(){
 
     // console.log("Try Pause it now: " + running + ", " + gameOver, ", " + gamePaused)
     
-    if(gamePaused){
+    if(gamePaused==true){
 
         cancelAnimationFrame(AnimationId)            
         oMessageBox = new MessageBox((canvas.width/2)-100, (canvas.height/2)-40, 250, 80, 'black', 'red', "20px Courier", "Game Paused!!!");
-        oMessageBox.draw("Game Paused!!!");
+        oMessageBox.draw();
+        //timer.pause();
         return;
     } 
  
@@ -434,7 +548,7 @@ function gameLoop(){
         if(!steppedGame) requestAnimationFrame(laggedRequestAnimationFrame)
 
         update();
-        paint();
+        draw();
 
     } else {
 
@@ -449,7 +563,7 @@ function gameLoop(){
         
     }
 }
-function paint(){
+function draw(){
 
     // Clear the canvas
     ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -469,26 +583,12 @@ function paint(){
     ctx.restore();
 
     oSnake.draw();
+    
     oVitamin.draw();
-    oTimeBox.draw(getTime().toString());
+    //timer.reset();
+    oTimeBox.draw();
     oScoreBox.draw("Score: " + score);
     oGameTitle.draw();
-
-
-    // Draw particles
-    particles.forEach((particle, particleIndex) => {
-
-        if (particle.alpha <= 0) {
-            // after alpha hit < 0 the particle reappears on the screen. 
-            // let's make sure that does not happen
-            particles.splice(particleIndex, 1)
-        } else {
-            // console.log("show particles on screeen")
-            // console.log(particle);
-            particle.update();
-            particle.draw();    
-        }
-    })
 }
 function update(){
 
@@ -496,38 +596,62 @@ function update(){
 
     oSnake.update();
     oScoreBox.update()
-    oTimeBox.update(getTime());
-
+    oTimeBox.update(stopwatch.update());
+    
+    console.log("Snake's X.Y pos -> x: " + oSnake.x + " y: " + oSnake.y);
 
     // if player tries to move off the board prevent that (LE: No need for this game)
-    if(oSnake.y < 55 || oSnake.y >= canvas.height-20){
+    if(oSnake.y < dashboardHeight  || oSnake.y > canvas.height-20){
         gameOver = true;
-    } else if(oSnake.x<=0 || oSnake.x >= (canvas.width-20)){
-        gameOver = true;
+        oCrash.play();
     }
-
+    if(oSnake.x < 0 || oSnake.x > (canvas.width-20)){
+        // oSnake.move = DIRECTION.LEFT;
+        // oSnake.update();
+        // oSnake.draw();
+        gameOver = true;
+        oCrash.play();
+    }
     
-    console.log("f1: " + recCollisionDectetion(oSnake, oVitamin));
-    if(recCollisionDectetion(oSnake, oVitamin)) {
-        // console.log("Collision detected");
-        // if (!gamePaused) gameOver = true;
-        // setGameOver();
+    // console.log("crashWithOthers: " + oSnake.crashWithOthers(oVitamin));
+    if(oSnake.crashWithOthers(oVitamin)) {
+        
+        // myAudio.play();
+        // myAudio.pause();
 
-        // circle explosion
-        splashIt(oVitamin, 'red');
+        oEat.play();
+        oVitamin.splashIt();
         oVitamin.move();
         addScore();
         oScoreBox = new MessageBox(5, 5, 150, 30, 'black', 'yellow', "20px Courier", "Score: " + score);
         setTimeout(function(){ oSnake.grow(1);}, 1000);
     }
+
+    for (let index = 2; index < oSnake.cuerpo.length; index++) {
+
+        var tile = oSnake.cuerpo[index];
+
+        // console.log(tile); console.log(oSnake)
+        if(oSnake.crashWithBody(tile)) {
+            gameOver = true;
+            oCrash.play();
+        }
+    }
+    
+
 }
 function MovePlayerPaddle(key){
-
 
     if ((key.keyCode === 32)  && (running == true)){
 
         // reset pause the game
         gamePaused = !gamePaused;
+
+        if (gamePaused) {
+            stopwatch.stop();
+        } else {
+            stopwatch.start();
+        }
         // console.log("gamePaused: " + gamePaused);
         gameLoop();
         return;
@@ -537,6 +661,7 @@ function MovePlayerPaddle(key){
         // game started
         running = true;
         gamePaused = false;
+        stopwatch.start();
         if (!steppedGame) requestAnimationFrame(laggedRequestAnimationFrame)
         oSnake.move = DIRECTION.RIGHT; 
     }
@@ -581,6 +706,8 @@ function MovePlayerPaddle(key){
             break;
     }
     // console.log("key.code: " + key.keyCode)
+
+    // for testing purpose only
     if(steppedGame) gameLoop();
 }
 function getTime(){
@@ -599,7 +726,7 @@ function laggedRequestAnimationFrame(timestamp){
         AnimationId = requestAnimationFrame(gameLoop);
     }, 1000/fps)
 }
-function drawVitamin(x, y){
+function drawApple(x, y){
 
     // Image implementation (both work with not error by the image does not show)
     const appleImg  = new Image();
@@ -658,20 +785,15 @@ function setGameOver(){
 
     // Finish the game
     cancelAnimationFrame(AnimationId)
-        
+    //timer.stop();
+    stopwatch.stop();
+
+    oGameOver.play();
+
     oMessageBox = new MessageBox((canvas.width/2)-100, (canvas.height/2)-40, 200, 80, 'black', 'red', "20px Courier", "Game Over!!!");
-    oMessageBox.draw("GameOver");
+    // oMessageBox.update("Game Over!")
+    oMessageBox.draw();
     
-}
-function splashIt(target, color){
-
-    // console.log("Boom - Enemy Splased!!!")
-
-    for (let index = 0; index < 8   ; index++) {
-        // particles.push(new Particle(target.x, target.y, 3, {x: Math.random()-0.5, y: Math.random()-0.5}, color))    
-        particles.push(new Particle(target.x, target.y, 3,   {x: Math.floor(Math.random())*10-5, y: Math.floor(Math.random())*10-5}, color))    
-    }
-    // console.log(particles)
 }
 function addScore(){
     score += 5;
