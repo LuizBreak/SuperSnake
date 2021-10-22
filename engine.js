@@ -21,6 +21,8 @@ let oTimeBox;
 let oScoreBox;
 let oGameTitle;
 
+let lives = 3;
+
 let today = new Date();
 
 // Article reference: https://www.101computing.net/stopwatch-class-javascript/
@@ -408,15 +410,8 @@ class Vitamin{
         // .log("vitamin moved to x: " + this.x + " y: " + this.y)
     }
     #drawImage(x, y){
-
-        // Image implementation (both work with not error by the image does not show)
         const appleImg  = new Image();
         appleImg.src = './asset/sprite_0.png'
-
-        var img = document.getElementById("source");
-
-        // console.log(x + ", " + y) 
-        //ctx.drawImage(appleImg, x, y);
         ctx.drawImage(appleImg, 1, 1, 104, 124, x-14, y-7, 80, 80);
     }
     splashIt(){
@@ -541,10 +536,8 @@ function gameLoop(){
     } 
  
     // console.log("Game is On!!");
-    if(!gameOver && !gamePaused) {
+    if((!gameOver && !gamePaused)) {
 
-        // console.log("run it then!")
-        // AnimationId = requestAnimationFrame(gameLoop);
         if(!steppedGame) requestAnimationFrame(laggedRequestAnimationFrame)
 
         update();
@@ -552,14 +545,11 @@ function gameLoop(){
 
     } else {
 
-        setGameOver();
-
-        // // Finish the game
-        // cancelAnimationFrame(AnimationId)
-        // // console.log("gameOver: " + gameOver);
-          
-        // oMessageBox = new MessageBox((canvas.width/2)-100, (canvas.height/2)-40, 200, 80, 'black', 'red', "20px Courier", "Game Over!!!");
-        // oMessageBox.draw("GameOver");
+        if(lives==0){
+            setGameOver();
+        } else {
+            resetBoard();
+        }
         
     }
 }
@@ -604,6 +594,7 @@ function update(){
     if(oSnake.y < dashboardHeight  || oSnake.y > canvas.height-20){
         gameOver = true;
         oCrash.play();
+        lives--;
     }
     if(oSnake.x < 0 || oSnake.x > (canvas.width-20)){
         // oSnake.move = DIRECTION.LEFT;
@@ -611,6 +602,7 @@ function update(){
         // oSnake.draw();
         gameOver = true;
         oCrash.play();
+        lives--;
     }
     
     // console.log("crashWithOthers: " + oSnake.crashWithOthers(oVitamin));
@@ -635,6 +627,7 @@ function update(){
         if(oSnake.crashWithBody(tile)) {
             gameOver = true;
             oCrash.play();
+            lives--;
         }
     }
     
@@ -797,4 +790,16 @@ function setGameOver(){
 }
 function addScore(){
     score += 5;
+}
+function resetBoard(){
+
+    oSnake = new Snake(300, 140, 'yellow');
+    oSnake.grow(1);
+
+    oVitamin.move()
+
+    gameOver = false;
+    gamePaused = false;
+
+    gameLoop(); 
 }
