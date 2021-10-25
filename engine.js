@@ -55,7 +55,7 @@ function SetupCanvas(){
     canvas.width = 620;
     canvas.height = 280;
 
-    document.addEventListener('keydown', MovePlayerPaddle);
+    document.addEventListener('keydown', ProcessUserCommands);
 
     oSnake = new Snake(300, 140, 'yellow');
     oSnake.grow(1);
@@ -66,9 +66,9 @@ function SetupCanvas(){
     stopwatch = new Stopwatch("stopWatchDisplay");
     stopwatch.reset();
 
-    oScoreBox = new MessageBox(5, 5, 150, 30, 'black', 'yellow', "20px Courier", "Score: " + score);
-    oTimeBox = new MessageBox(canvas.width-158, 5, 152, 30, 'black', 'yellow', "20px Courier", stopwatch.update());
-    oGameTitle = new MessageBox((canvas.width/2)-75, 5, 150, 30, 'white', 'red', "20px Courier", "  Snake");
+    oGameTitle = new MessageBox(5, 5, 150, 30, 'white', 'red', "20px Courier", "  Snake");
+    oScoreBox = new MessageBox((canvas.width/3), 5, 120, 30, 'black', 'yellow', "20px Courier", "Score: " + score);
+    oTimeBox = new MessageBox(canvas.width-258, 5, 152, 30, 'black', 'yellow', "20px Courier", stopwatch.update());
 
     draw();
 
@@ -99,7 +99,7 @@ class Snake {
         this.velocity = 20;
         this.cuerpo = [];
 
-        this.length = 0;
+        this.bodySize = 0;
 
        // save head's positon for next tile
        let tilePosX = this.prevX;
@@ -125,9 +125,7 @@ class Snake {
         ctx.strokeStyle = "black"
         ctx.stroke();
 
-
-        // console.log("contruct.draw.1");
-        // console.log(this.snappedTiles
+        this.#drawLives();
 
         // draw individual tiles into body
         for (let index = 0; index < this.cuerpo.length; index++) {
@@ -135,9 +133,6 @@ class Snake {
             currentTile.draw();
         }
         ctx.restore();
-
-        // console.log("contructdraw.2");
-        // console.log(this.snappedTiles)
     }
     update(){
 
@@ -223,7 +218,7 @@ class Snake {
             tilePosX -= 20; // TODO: Check if whether of not the head should always grow to the right???
             //tilePosY -= tilePosY;    // Y does not change for the initial setup       
         }
-
+        this.bodySize += numberOfTiles;
     }
     crashWithBody(tile){
     
@@ -252,6 +247,18 @@ class Snake {
             crash = false;
         }
         return crash;
+    }
+    #drawLives(x, y){
+
+        let posX = canvas.width - 110  ;
+
+        for (let index = 0; index < lives; index++) {
+            posX += 22;
+            const snakeImg  = new Image();
+            snakeImg.src = './asset/snake-sprite-2.png'
+            ctx.drawImage(snakeImg, 1, 1, 32 , 32, posX, 8, 28, 28);
+        }
+
     }
 }
 class Tile {
@@ -345,7 +352,8 @@ class MessageBox{
 
         ctx.fillStyle = this.foreColor;
         ctx.font = this.font
-        ctx.fillText(this.message, this.x + (this.wWith*0.18), this.y + (this.wHeight*0.65));
+        ctx.textAlign = "center";
+        ctx.fillText(this.message, this.x + (this.wWith/2), this.y + (this.wHeight*0.65));
 
         ctx.restore();
 
@@ -411,7 +419,7 @@ class Vitamin{
     }
     #drawImage(x, y){
         const appleImg  = new Image();
-        appleImg.src = './asset/sprite_0.png'
+        appleImg.src = './asset/apple_sprite.png'
         ctx.drawImage(appleImg, 1, 1, 104, 124, x-14, y-7, 80, 80);
     }
     splashIt(){
@@ -490,13 +498,13 @@ class Stopwatch {
     }
     
     stop() {
-         if (this.state=="running") {
-        this.state="paused";
-      if (this.interval) {
-        clearInterval(this.interval);
-        this.interval = null;
-      }
-         }
+        if (this.state=="running") {
+            this.state="paused";
+            if (this.interval) {
+                clearInterval(this.interval);
+                this.interval = null;
+            }
+        }
     }
     
     reset() {
@@ -515,7 +523,6 @@ class SoundPlayer {
         // Allow for playing sound
         this.#beepSound = document.getElementById(id);
         this.#beepSound.src = source;
-        console.log(this.#beepSound)
     }
 
     play(){
@@ -524,14 +531,11 @@ class SoundPlayer {
 }
 function gameLoop(){
 
-    // console.log("Try Pause it now: " + running + ", " + gameOver, ", " + gamePaused)
-    
     if(gamePaused==true){
 
         cancelAnimationFrame(AnimationId)            
         oMessageBox = new MessageBox((canvas.width/2)-100, (canvas.height/2)-40, 250, 80, 'black', 'red', "20px Courier", "Game Paused!!!");
         oMessageBox.draw();
-        //timer.pause();
         return;
     } 
  
@@ -539,7 +543,6 @@ function gameLoop(){
     if((!gameOver && !gamePaused)) {
 
         if(!steppedGame) requestAnimationFrame(laggedRequestAnimationFrame)
-
         update();
         draw();
 
@@ -572,50 +575,39 @@ function draw(){
     ctx.stroke();
     ctx.restore();
 
-    oSnake.draw();
-    
-    oVitamin.draw();
-    //timer.reset();
     oTimeBox.draw();
     oScoreBox.draw("Score: " + score);
     oGameTitle.draw();
+
+    oSnake.draw();
+    oVitamin.draw();
 }
 function update(){
-
-    // console.log("update.enter")
 
     oSnake.update();
     oScoreBox.update()
     oTimeBox.update(stopwatch.update());
-    
-    console.log("Snake's X.Y pos -> x: " + oSnake.x + " y: " + oSnake.y);
 
     // if player tries to move off the board prevent that (LE: No need for this game)
     if(oSnake.y < dashboardHeight  || oSnake.y > canvas.height-20){
         gameOver = true;
         oCrash.play();
+        stopwatch.stop();
         lives--;
     }
     if(oSnake.x < 0 || oSnake.x > (canvas.width-20)){
-        // oSnake.move = DIRECTION.LEFT;
-        // oSnake.update();
-        // oSnake.draw();
         gameOver = true;
         oCrash.play();
+        stopwatch.stop();
         lives--;
     }
     
-    // console.log("crashWithOthers: " + oSnake.crashWithOthers(oVitamin));
     if(oSnake.crashWithOthers(oVitamin)) {
-        
-        // myAudio.play();
-        // myAudio.pause();
-
         oEat.play();
         oVitamin.splashIt();
         oVitamin.move();
         addScore();
-        oScoreBox = new MessageBox(5, 5, 150, 30, 'black', 'yellow', "20px Courier", "Score: " + score);
+        oScoreBox.draw("Score: " + score);
         setTimeout(function(){ oSnake.grow(1);}, 1000);
     }
 
@@ -623,17 +615,15 @@ function update(){
 
         var tile = oSnake.cuerpo[index];
 
-        // console.log(tile); console.log(oSnake)
         if(oSnake.crashWithBody(tile)) {
             gameOver = true;
             oCrash.play();
+            stopwatch.stop();
             lives--;
         }
     }
-    
-
 }
-function MovePlayerPaddle(key){
+function ProcessUserCommands(key){
 
     if ((key.keyCode === 32)  && (running == true)){
 
@@ -645,7 +635,6 @@ function MovePlayerPaddle(key){
         } else {
             stopwatch.start();
         }
-        // console.log("gamePaused: " + gamePaused);
         gameLoop();
         return;
 
@@ -665,11 +654,6 @@ function MovePlayerPaddle(key){
         case (key.keyCode === 27):      
             if (!gamePaused) gameOver = true;
             break;
-
-        // Handle space bar for PAUSE
-        // case (key.keyCode === 32):
-        //     running = true;
-        //     break;
 
         // Handle up arrow and w input
         case (key.keyCode === 38 || key.keyCode === 87) && oSnake.move != DIRECTION.DOWN: 
@@ -784,7 +768,6 @@ function setGameOver(){
     oGameOver.play();
 
     oMessageBox = new MessageBox((canvas.width/2)-100, (canvas.height/2)-40, 200, 80, 'black', 'red', "20px Courier", "Game Over!!!");
-    // oMessageBox.update("Game Over!")
     oMessageBox.draw();
     
 }
@@ -793,6 +776,8 @@ function addScore(){
 }
 function resetBoard(){
 
+    let bodySize = oSnake.bodySize;
+
     oSnake = new Snake(300, 140, 'yellow');
     oSnake.grow(1);
 
@@ -800,6 +785,8 @@ function resetBoard(){
 
     gameOver = false;
     gamePaused = false;
+
+    stopwatch.reset();
 
     gameLoop(); 
 }
