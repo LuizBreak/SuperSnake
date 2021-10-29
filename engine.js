@@ -78,7 +78,6 @@ function SetupCanvas(){
 }
 class Snake {
 
-
     constructor(x, y, color){
 
         this.color = color;
@@ -157,9 +156,7 @@ class Snake {
                 this.x -= this.velocity;
                 break;
         }
-        // console.log("update.updatePrevious.1");
-        // console.log(this.snappedTiles)
-        
+
         // console.log("Snake Postions -> x: " + this.x + " y: " + this.y);
         // console.log("Snake Prev Postions -> x: " + this.prevX + " y: " + this.prevY);
 
@@ -182,8 +179,6 @@ class Snake {
             tilePosY = currentTile.prevY;
 
         }
-        // console.log("update.updatePrevious.2");
-        // console.log(this.snappedTiles)
     }
     grow(numberOfTiles){
 
@@ -328,9 +323,6 @@ class MessageBox{
 
         this.message = message;
 
-        // let messagePosX = x+50;
-        // let messagePosY = y+100;
-
     }
     draw(){
 
@@ -388,8 +380,6 @@ class Vitamin{
                 // let's make sure that does not happen
                 this.particles.splice(particleIndex, 1)
             } else {
-                // console.log("show particles on screeen")
-                // console.log(particle);
                 particle.update();
                 particle.draw();    
             }
@@ -402,7 +392,6 @@ class Vitamin{
         ctx.fill();
         ctx.restore();
 
-        //drawApple(this.x, this.y);
         this.#drawImage(this.x, this.y)
 
     }
@@ -411,7 +400,7 @@ class Vitamin{
         this.x = Math.floor(Math.random() * canvas.width-40);
         this.y = Math.floor(Math.random() * canvas.height-40);
 
-        // // ensure to discount the dashboard space or any off boundaries
+        // ensure to discount the dashboard space or any off boundaries
         if(this.y < 50 || this.y > canvas.height) this.y = 60;
         if(this.x < 20 || this.x > canvas.width) this.x = 60;
         
@@ -548,7 +537,7 @@ function gameLoop(){
 
     } else {
 
-        if(lives==0){
+        if(lives<0){
             setGameOver();
         } else {
             resetBoard();
@@ -783,10 +772,17 @@ function resetBoard(){
 
     oVitamin.move()
 
+    // if (oSnake.crashWithBody(oVitamin)){
+    //     oVitamin.move()
+    // }
+
+    while(oSnake.crashWithBody(oVitamin)){
+        oVitamin.move()   
+    }
     gameOver = false;
     gamePaused = false;
 
-    stopwatch.reset();
+    //stopwatch.reset();
 
     gameLoop(); 
 }

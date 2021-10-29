@@ -20,3 +20,18 @@ canvas {
     /* margin-right: 50px; */
     /* margin-top: 30px; */
 }
+.father {
+    position: relative;
+    background-color:blueviolet;    
+}
+.child {
+    border: 2px outset red;
+    background-color: rgb(184, 231, 243);    
+    text-align: center;
+    height: 120px;
+    width: 50%;
+    position: relative;
+    position: absolute;;
+    top: 25%;
+    left: 25%;
+}
